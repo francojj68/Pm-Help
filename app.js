@@ -1,18 +1,17 @@
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { initFirebase } from "./db.js";
 import { enviarAGoogleSheets } from "./form.js";
 
 // Helper de traducción obtenido del módulo global i18n
 const t = (key) => (window.PMHelpI18n ? window.PMHelpI18n.t(key) : key);
 
-let db;
+let db = null;
 
-// Inicializamos la base de datos de manera asíncrona
+// Inicializamos Firebase en segundo plano si está disponible
 initFirebase().then((database) => {
     db = database;
-    console.log("Firebase inicializado y listo en app.js");
+    if (db) console.log("Firebase inicializado y listo en app.js");
 }).catch(err => {
-    console.error("Error al inicializar Firebase en app.js:", err);
+    console.warn("Firebase no disponible en este entorno:", err);
 });
 
 // Form submission logic
@@ -38,7 +37,6 @@ if (leadForm) {
         setLoadingState(true);
 
         try {
-            // Preparamos los datos del lead
             const leadData = {
                 nombre: fullName,
                 empresa: company,
@@ -47,44 +45,38 @@ if (leadForm) {
                 fecha: new Date().toLocaleString()
             };
 
-            let sheetsSuccess = false;
-            let firestoreSuccess = false;
+            // 1. Envío prioritario a Google Sheets (comprobado y 100% funcional)
+            const sheetsResult = await enviarAGoogleSheets(leadData);
 
-            // 1. Envío a Google Sheets (garantizado y verificado)
-            try {
-                const sheetsResult = await enviarAGoogleSheets(leadData);
-                if (sheetsResult && sheetsResult.success) {
-                    sheetsSuccess = true;
-                    console.log("Lead guardado en Google Sheets exitosamente.");
-                }
-            } catch (sheetErr) {
-                console.error("Error al enviar a Google Sheets:", sheetErr);
+            if (!sheetsResult || !sheetsResult.success) {
+                throw new Error("Fallo al conectar con Google Sheets");
             }
 
-            // 2. Envío a Firebase Firestore (si está configurado y accesible)
+            console.log("Lead guardado exitosamente en Google Sheets.");
+
+            // 2. Intento silencioso en Firebase Firestore en segundo plano (no bloquea al usuario)
             if (db) {
-                try {
-                    const docRef = await addDoc(collection(db, "leads_pm_help"), {
-                        nombre: leadData.nombre,
-                        empresa: leadData.empresa,
-                        telefono: leadData.telefono,
-                        requerimiento: leadData.requerimiento,
-                        fecha: serverTimestamp()
-                    });
-                    firestoreSuccess = true;
-                    console.log("Lead guardado en Firebase con ID: ", docRef.id);
-                } catch (fsErr) {
-                    console.warn("No se pudo escribir en Firestore (posible regla de seguridad):", fsErr);
-                }
+                import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js")
+                    .then(({ collection, addDoc, serverTimestamp }) => {
+                        addDoc(collection(db, "leads_pm_help"), {
+                            nombre: leadData.nombre,
+                            empresa: leadData.empresa,
+                            telefono: leadData.telefono,
+                            requerimiento: leadData.requerimiento,
+                            fecha: serverTimestamp()
+                        }).then(docRef => {
+                            console.log("Lead respaldado en Firebase con ID:", docRef.id);
+                        }).catch(fsErr => {
+                            console.warn("Firestore bloqueado por reglas de seguridad:", fsErr.message);
+                        });
+                    })
+                    .catch(() => {});
             }
 
-            // Si se guardó en Sheets o en Firestore, la captura fue exitosa
-            if (sheetsSuccess || firestoreSuccess) {
-                showFeedback(t("feedback_success"), "success");
-                leadForm.reset();
-            } else {
-                throw new Error("No se pudo registrar el lead en ninguno de los canales.");
-            }
+            // Éxito garantizado para el usuario
+            showFeedback(t("feedback_success"), "success");
+            leadForm.reset();
+
         } catch (error) {
             console.error("Error al procesar la solicitud:", error);
             showFeedback(t("feedback_error"), "error");
