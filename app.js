@@ -1,18 +1,54 @@
-import { initFirebase } from "./db.js";
-import { enviarAGoogleSheets } from "./form.js";
+import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { initFirebase } from "./db.js?v=3.0";
+import { enviarAGoogleSheets } from "./form.js?v=3.0";
+
+// URL de respaldo directa por si el navegador tenía en caché una versión antigua de form.js
+const FALLBACK_SHEETS_URL = "https://script.google.com/macros/s/AKfycbz7JBaktGFsfRPsAVIe-z9Ng82w7M5jfmERpxzhwu0YTOtYY04z105SVUv7JKFi0x_whA/exec";
 
 // Helper de traducción obtenido del módulo global i18n
 const t = (key) => (window.PMHelpI18n ? window.PMHelpI18n.t(key) : key);
 
 let db = null;
 
-// Inicializamos Firebase en segundo plano si está disponible
-initFirebase().then((database) => {
+// Inicializamos Firebase de manera asíncrona
+const dbReadyPromise = initFirebase().then((database) => {
     db = database;
     if (db) console.log("Firebase inicializado y listo en app.js");
+    return db;
 }).catch(err => {
     console.warn("Firebase no disponible en este entorno:", err);
+    return null;
 });
+
+// Envío directo garantizado a Google Sheets
+async function sendToSheetsGuaranteed(leadData) {
+    try {
+        const res = await enviarAGoogleSheets(leadData);
+        if (res && res.success) return true;
+    } catch (e) {
+        console.warn("Reintentando envío directo a Google Sheets...", e);
+    }
+
+    // Fallback directo en caso de caché en form.js
+    try {
+        await fetch(FALLBACK_SHEETS_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(leadData)
+        });
+        return true;
+    } catch (err) {
+        if (navigator.sendBeacon) {
+            const blob = new Blob([JSON.stringify(leadData)], { type: "text/plain;charset=utf-8" });
+            if (navigator.sendBeacon(FALLBACK_SHEETS_URL, blob)) {
+                return true;
+            }
+        }
+        console.error("Error definitivo enviando a Google Sheets:", err);
+        return false;
+    }
+}
 
 // Form submission logic
 const leadForm = document.getElementById('leadForm');
@@ -45,37 +81,38 @@ if (leadForm) {
                 fecha: new Date().toLocaleString()
             };
 
-            // 1. Envío prioritario a Google Sheets (comprobado y 100% funcional)
-            const sheetsResult = await enviarAGoogleSheets(leadData);
-
-            if (!sheetsResult || !sheetsResult.success) {
-                throw new Error("Fallo al conectar con Google Sheets");
+            if (!db) {
+                db = await dbReadyPromise;
             }
 
-            console.log("Lead guardado exitosamente en Google Sheets.");
-
-            // 2. Intento silencioso en Firebase Firestore en segundo plano (no bloquea al usuario)
-            if (db) {
-                import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js")
-                    .then(({ collection, addDoc, serverTimestamp }) => {
-                        addDoc(collection(db, "leads_pm_help"), {
+            // Ejecutamos ambos envíos en paralelo (Google Sheets + Firebase Firestore)
+            const [sheetsOk, firestoreOk] = await Promise.all([
+                sendToSheetsGuaranteed(leadData),
+                (async () => {
+                    if (!db) return false;
+                    try {
+                        const docRef = await addDoc(collection(db, "leads_pm_help"), {
                             nombre: leadData.nombre,
                             empresa: leadData.empresa,
                             telefono: leadData.telefono,
                             requerimiento: leadData.requerimiento,
                             fecha: serverTimestamp()
-                        }).then(docRef => {
-                            console.log("Lead respaldado en Firebase con ID:", docRef.id);
-                        }).catch(fsErr => {
-                            console.warn("Firestore bloqueado por reglas de seguridad:", fsErr.message);
                         });
-                    })
-                    .catch(() => {});
-            }
+                        console.log("Lead guardado en Firebase con ID:", docRef.id);
+                        return true;
+                    } catch (fsErr) {
+                        console.warn("Aviso de Firebase Firestore:", fsErr.message);
+                        return false;
+                    }
+                })()
+            ]);
 
-            // Éxito garantizado para el usuario
-            showFeedback(t("feedback_success"), "success");
-            leadForm.reset();
+            if (sheetsOk || firestoreOk) {
+                showFeedback(t("feedback_success"), "success");
+                leadForm.reset();
+            } else {
+                throw new Error("No se pudo registrar el lead ni en Google Sheets ni en Firebase.");
+            }
 
         } catch (error) {
             console.error("Error al procesar la solicitud:", error);
