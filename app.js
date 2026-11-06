@@ -38,35 +38,55 @@ if (leadForm) {
         setLoadingState(true);
 
         try {
-            // Check if db is initialized properly
-            if (!db) throw new Error("Base de datos no inicializada. Revisa la configuración de Firebase.");
-
             // Preparamos los datos del lead
             const leadData = {
                 nombre: fullName,
                 empresa: company,
                 telefono: phone,
-                requerimiento: requirement
+                requerimiento: requirement,
+                fecha: new Date().toLocaleString()
             };
 
-            // 1. Añadimos el documento a Firebase
-            const docRef = await addDoc(collection(db, "leads_pm_help"), {
-                ...leadData,
-                fecha: serverTimestamp()
-            });
-            console.log("Lead guardado en Firebase con ID: ", docRef.id);
+            let sheetsSuccess = false;
+            let firestoreSuccess = false;
 
-            // 2. Enviamos los datos a Google Sheets como doble respaldo
-            leadData.fecha = new Date().toLocaleString(); // Añadimos fecha en texto para el Sheets
-            const sheetsResult = await enviarAGoogleSheets(leadData);
-            if(sheetsResult.success) {
-                console.log("Lead respaldado en Google Sheets exitosamente.");
+            // 1. Envío a Google Sheets (garantizado y verificado)
+            try {
+                const sheetsResult = await enviarAGoogleSheets(leadData);
+                if (sheetsResult && sheetsResult.success) {
+                    sheetsSuccess = true;
+                    console.log("Lead guardado en Google Sheets exitosamente.");
+                }
+            } catch (sheetErr) {
+                console.error("Error al enviar a Google Sheets:", sheetErr);
             }
 
-            showFeedback(t("feedback_success"), "success");
-            leadForm.reset();
+            // 2. Envío a Firebase Firestore (si está configurado y accesible)
+            if (db) {
+                try {
+                    const docRef = await addDoc(collection(db, "leads_pm_help"), {
+                        nombre: leadData.nombre,
+                        empresa: leadData.empresa,
+                        telefono: leadData.telefono,
+                        requerimiento: leadData.requerimiento,
+                        fecha: serverTimestamp()
+                    });
+                    firestoreSuccess = true;
+                    console.log("Lead guardado en Firebase con ID: ", docRef.id);
+                } catch (fsErr) {
+                    console.warn("No se pudo escribir en Firestore (posible regla de seguridad):", fsErr);
+                }
+            }
+
+            // Si se guardó en Sheets o en Firestore, la captura fue exitosa
+            if (sheetsSuccess || firestoreSuccess) {
+                showFeedback(t("feedback_success"), "success");
+                leadForm.reset();
+            } else {
+                throw new Error("No se pudo registrar el lead en ninguno de los canales.");
+            }
         } catch (error) {
-            console.error("Error adding document: ", error);
+            console.error("Error al procesar la solicitud:", error);
             showFeedback(t("feedback_error"), "error");
         } finally {
             setLoadingState(false);
