@@ -4,7 +4,7 @@
 (function () {
     const translations = {
         es: {
-            page_title: "PM Help | Agencia de Inteligencia Artificial en Colombia | Consultoría de IA y Desarrollo Web",
+            page_title: "PM Help | Agencia de Inteligencia Artificial, Automatización y Desarrollo Web en Colombia",
             nav_contact: "Contacto",
             nav_cases: "Casos de Éxito",
             nav_services: "Servicios",
@@ -124,16 +124,16 @@
             lang_toggle_tooltip: "Cambiar idioma a Inglés (EN)"
         },
         en: {
-            page_title: "PM Help | Artificial Intelligence Agency in Colombia | AI Consulting & Web Development",
+            page_title: "PM Help | AI Automation Agency & Custom AI Agents for Businesses in USA",
             nav_contact: "Contact",
             nav_cases: "Case Studies",
             nav_services: "Services",
             video_fallback: "Your browser does not support the video format.",
 
             // Hero
-            hero_badge: "Artificial Intelligence Agency in Colombia",
-            hero_title: "Artificial Intelligence Agency in Colombia: We Automate Your Critical Processes and Web Development in 30 Days",
-            hero_subtitle: 'We free up to 40% of your team\'s time and accelerate your sales by integrating <span class="font-semibold text-navy">AI Agents</span>, workflow automation, and <span class="font-semibold text-navy">high-converting web development</span>, backed by our <span class="font-semibold text-navy">Guaranteed Adoption Methodology</span>.',
+            hero_badge: "AI Automation Agency & Custom AI Agents for USA",
+            hero_title: "AI Automation Agency & Custom AI Agents for Businesses in USA: Automate Critical Processes in 30 Days",
+            hero_subtitle: 'We free up to 40% of your team\'s time and accelerate your sales by integrating <span class="font-semibold text-navy">Custom AI Agents</span>, workflow automation, and <span class="font-semibold text-navy">high-converting web ecosystems</span>, backed by our <span class="font-semibold text-navy">Guaranteed Adoption Methodology</span>.',
             hero_premise_title: "The premise:",
             hero_premise_text: "AI does not replace human talent; it empowers teams to achieve superior performance. It detects patterns, automates operational friction, and reclaims your company's strategic focus.",
             hero_cta: "Schedule Free Feasibility Audit",
@@ -262,13 +262,18 @@
     let currentLang = 'es';
     let subtitleMode = 'auto'; // 'auto' (sigue el idioma de la página), 'en', 'es', 'off'
 
-    try {
-        const saved = localStorage.getItem('pm_help_lang');
-        if (saved === 'es' || saved === 'en') {
-            currentLang = saved;
+    // Detección automática por URL (/en/) o localStorage
+    if (typeof window !== 'undefined' && window.location && (window.location.pathname.startsWith('/en') || window.location.pathname.includes('/en/'))) {
+        currentLang = 'en';
+    } else {
+        try {
+            const saved = localStorage.getItem('pm_help_lang');
+            if (saved === 'es' || saved === 'en') {
+                currentLang = saved;
+            }
+        } catch (e) {
+            console.warn("Storage local no accesible:", e);
         }
-    } catch (e) {
-        console.warn("Storage local no accesible:", e);
     }
 
     function getLanguage() {
@@ -492,13 +497,28 @@
             toggleBtn.addEventListener('click', (e) => {
                 const espTarget = e.target.closest('#langEspBadge');
                 const enTarget = e.target.closest('#langEnBadge');
+                const isEnPage = typeof window !== 'undefined' && window.location && (window.location.pathname.startsWith('/en') || window.location.pathname.includes('/en/'));
 
-                if (espTarget && currentLang !== 'es') {
+                if (espTarget) {
+                    if (isEnPage && window.location.protocol.startsWith('http')) {
+                        window.location.href = '../';
+                        return;
+                    }
                     setLanguage('es');
-                } else if (enTarget && currentLang !== 'en') {
+                } else if (enTarget) {
+                    if (!isEnPage && window.location.protocol.startsWith('http')) {
+                        window.location.href = 'en/';
+                        return;
+                    }
                     setLanguage('en');
                 } else {
-                    toggleLanguage();
+                    if (isEnPage && window.location.protocol.startsWith('http')) {
+                        window.location.href = '../';
+                    } else if (!isEnPage && currentLang === 'es' && window.location.protocol.startsWith('http')) {
+                        window.location.href = 'en/';
+                    } else {
+                        toggleLanguage();
+                    }
                 }
             });
         }
