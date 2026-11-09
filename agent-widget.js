@@ -86,7 +86,7 @@
         const launcher = document.createElement('button');
         launcher.id = 'aiWidgetLauncher';
         launcher.type = 'button';
-        launcher.className = 'flex items-center gap-2.5 bg-navy text-white px-4 py-3.5 rounded-full shadow-2xl hover:bg-navyLight hover:scale-105 transition-all duration-300 ring-4 ring-gold/30 border border-gold/40 cursor-pointer group';
+        launcher.className = 'flex items-center gap-2.5 bg-slate-900 text-white px-4 py-3.5 rounded-full shadow-2xl hover:bg-slate-900Light hover:scale-105 transition-all duration-300 ring-4 ring-blue-500/20 border border-slate-700/80 cursor-pointer group';
         launcher.setAttribute('aria-label', 'Abrir Asistente IA de PM Help');
         
         launcher.innerHTML = `
@@ -95,12 +95,12 @@
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-mint opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-3 w-3 bg-mint"></span>
                 </span>
-                <svg class="w-6 h-6 text-gold group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-6 h-6 text-blue-400 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
                 </svg>
             </div>
             <div class="text-left hidden sm:block">
-                <div class="text-xs font-bold leading-tight text-gold flex items-center gap-1.5">
+                <div class="text-xs font-bold leading-tight text-blue-400 flex items-center gap-1.5">
                     <span data-i18n="agent_launcher">Asistente IA</span>
                     <span class="w-1.5 h-1.5 rounded-full bg-mint"></span>
                 </div>
@@ -115,10 +115,10 @@
 
         chatBox.innerHTML = `
             <!-- Chat Header -->
-            <div class="bg-navy p-4 text-white flex items-center justify-between border-b border-navyLight">
+            <div class="bg-slate-900 p-4 text-white flex items-center justify-between border-b border-navyLight">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-gold/20 border border-gold/50 flex items-center justify-center text-gold shadow-inner flex-shrink-0">
-                        <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shadow-inner flex-shrink-0">
+                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                         </svg>
                     </div>
@@ -152,8 +152,8 @@
 
             <!-- Input Area -->
             <form id="aiChatForm" class="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
-                <input type="text" id="aiChatInput" autocomplete="off" placeholder="Escribe tu consulta aquí..." data-i18n-placeholder="agent_placeholder" class="flex-1 px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-navy focus:border-navy text-navy">
-                <button type="submit" class="bg-gold text-navy font-bold p-2.5 rounded-xl hover:bg-goldHover transition-colors flex-shrink-0 cursor-pointer shadow-sm" title="Enviar" aria-label="Enviar">
+                <input type="text" id="aiChatInput" autocomplete="off" placeholder="Escribe tu consulta aquí..." data-i18n-placeholder="agent_placeholder" class="flex-1 px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900">
+                <button type="submit" class="bg-blue-600 text-white font-bold p-2.5 rounded-xl hover:bg-blue-700 transition-colors flex-shrink-0 cursor-pointer shadow-sm" title="Enviar" aria-label="Enviar">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </button>
             </form>
@@ -210,17 +210,17 @@
 
             const bubble = document.createElement('div');
             if (sender === 'user') {
-                bubble.className = 'bg-navy text-white px-3.5 py-2.5 rounded-2xl rounded-tr-sm max-w-[85%] shadow-sm';
+                bubble.className = 'bg-slate-900 text-white px-3.5 py-2.5 rounded-2xl rounded-tr-sm max-w-[85%] shadow-sm';
                 bubble.textContent = text;
             } else {
-                bubble.className = 'bg-white text-navy border border-slate-200 px-3.5 py-2.5 rounded-2xl rounded-tl-sm max-w-[88%] shadow-sm leading-relaxed';
+                bubble.className = 'bg-white text-slate-900 border border-slate-200 px-3.5 py-2.5 rounded-2xl rounded-tl-sm max-w-[88%] shadow-sm leading-relaxed';
                 if (isHtml) {
                     bubble.innerHTML = text;
                 } else {
                     // Simple markdown-to-html converter for bold & links
                     let formatted = text
                         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener" class="text-gold font-bold underline hover:text-navy">$1</a>');
+                        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener" class="text-blue-400 font-bold underline hover:text-slate-900">$1</a>');
                     bubble.innerHTML = formatted;
                 }
             }
@@ -265,7 +265,7 @@
                     const actionRow = document.createElement('div');
                     actionRow.className = 'flex flex-col gap-2 pt-1 animate-fade-in';
                     actionRow.innerHTML = `
-                        <a href="#contacto" onclick="document.getElementById('aiChatBox').classList.add('hidden');" class="inline-flex items-center justify-center gap-1.5 bg-gold hover:bg-goldHover text-navy text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-sm text-center">
+                        <a href="#contacto" onclick="document.getElementById('aiChatBox').classList.add('hidden');" class="inline-flex items-center justify-center gap-1.5 bg-gold hover:bg-blue-700 text-slate-900 text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-sm text-center">
                             <span>Agendar Auditoría Gratuita en el Formulario</span>
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                         </a>
@@ -288,7 +288,7 @@
             kb.chips.forEach(chipText => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'whitespace-nowrap px-3 py-1.5 rounded-full bg-white hover:bg-gold hover:text-navy text-navy font-medium text-[11px] border border-slate-200 transition-all shadow-sm flex-shrink-0 cursor-pointer';
+                btn.className = 'whitespace-nowrap px-3 py-1.5 rounded-full bg-white hover:bg-gold hover:text-slate-900 text-slate-900 font-medium text-[11px] border border-slate-200 transition-all shadow-sm flex-shrink-0 cursor-pointer';
                 btn.textContent = chipText;
                 btn.addEventListener('click', () => {
                     handleUserMessage(chipText);
