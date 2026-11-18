@@ -119,7 +119,7 @@
 
             // Footer & Floating
             footer_contact: "Contáctanos:",
-            footer_rights: "&copy; 2026 PM Help IA Solutions. Todos los derechos reservados. Colombia.",
+            footer_rights: "&copy; 2026 PM Help. Todos los derechos reservados. Bogotá, Colombia.",
             whatsapp_aria: "Contactar por WhatsApp a PM Help",
             lang_toggle_tooltip: "Cambiar idioma a Inglés (EN)"
         },
@@ -239,7 +239,7 @@
 
             // Footer & Floating
             footer_contact: "Contact us:",
-            footer_rights: "&copy; 2026 PM Help AI Solutions. All rights reserved. Colombia.",
+            footer_rights: "&copy; 2026 PM Help. All rights reserved. Bogotá, Colombia.",
             whatsapp_aria: "Contact PM Help on WhatsApp",
             lang_toggle_tooltip: "Switch language to Spanish (ESP)"
         }
